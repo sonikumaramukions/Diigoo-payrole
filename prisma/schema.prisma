@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  RUNNING
+  COMPLETED
+  ARCHIVED
+}
+
+enum EventType {
+  DELIVERED
+  OPENED
+  LANDING_PAGE_VISITED
+  LOGIN_ATTEMPTED
+  PHISHING_REPORTED
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  lastLoginAt  DateTime? @map("last_login_at")
+
+  auditLogs AuditLog[]
+
+  @@map("admins")
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  startDate   DateTime?      @map("start_date")
+  endDate     DateTime?      @map("end_date")
+  status      CampaignStatus @default(DRAFT)
+  emailSubject String?       @map("email_subject")
+  landingPage  String?       @map("landing_page")
+  trackingEnabled Boolean    @default(true) @map("tracking_enabled")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  participants Participant[]
+  events       CampaignEvent[]
+
+  @@map("campaigns")
+}
+
+model Participant {
+  id              String   @id @default(cuid())
+  employeeId      String   @map("employee_id")
+  employeeEmail   String   @map("employee_email")
+  department      String
+  campaignId      String   @map("campaign_id")
+  uniqueToken     String   @unique @map("unique_token")
+  emailDelivered  Boolean  @default(false) @map("email_delivered")
+  emailOpened     Boolean  @default(false) @map("email_opened")
+  landingPageVisited Boolean @default(false) @map("landing_page_visited")
+  loginAttempted  Boolean  @default(false) @map("login_attempted")
+  phishingReported Boolean @default(false) @map("phishing_reported")
+  firstSeenAt     DateTime? @map("first_seen_at")
+  lastSeenAt      DateTime? @map("last_seen_at")
+  ipAddress       String?  @map("ip_address")
+  userAgent       String?  @map("user_agent")
+  browser         String?
+  operatingSystem String?  @map("operating_system")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  campaign Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  events   CampaignEvent[]
+
+  @@index([campaignId])
+  @@index([uniqueToken])
+  @@map("participants")
+}
+
+model CampaignEvent {
+  id            String    @id @default(cuid())
+  campaignId    String    @map("campaign_id")
+  participantId String    @map("participant_id")
+  eventType     EventType @map("event_type")
+  ipAddress     String?   @map("ip_address")
+  userAgent     String?   @map("user_agent")
+  browser       String?
+  operatingSystem String? @map("operating_system")
+  emailEntered  String?   @map("email_entered")
+  metadata      Json?
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  campaign    Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  participant Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([participantId])
+  @@index([eventType])
+  @@map("campaign_events")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  adminId   String   @map("admin_id")
+  action    String
+  resource  String
+  resourceId String? @map("resource_id")
+  details   Json?
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+model RateLimit {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  count     Int      @default(0)
+  windowStart DateTime @default(now()) @map("window_start")
+
+  @@map("rate_limits")
+}
