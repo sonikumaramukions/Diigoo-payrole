@@ -45,6 +45,7 @@ function FakePortal() {
   const [phase, setPhase] = useState<Phase>('signing-in');
   const [tab, setTab] = useState<Tab>('Dashboard');
   const [profileSaved, setProfileSaved] = useState(false);
+  const [dept, setDept] = useState('');
 
   const [pdMonthly, setPdMonthly] = useState('1800');
   const [pdYears, setPdYears] = useState('3');
@@ -63,11 +64,23 @@ function FakePortal() {
     };
   }, []);
 
-  // Behaves like the real app: shows a "saved" confirmation and stores NOTHING.
+  // Behaves like the real app: shows a "saved" confirmation. Records ONLY the
+  // department (benign) for counselling — no name/email/password captured here.
   // The reveal is left to the ~4 min timer so the experience feels genuine.
-  const handleProfileSave = (e: React.FormEvent) => {
+  const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setProfileSaved(true);
+    try {
+      if (token && dept.trim()) {
+        await fetch('/api/tracking/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, department: dept.trim() }),
+        });
+      }
+    } catch {
+      // best-effort; keep the illusion intact
+    }
   };
 
   return (
@@ -264,7 +277,7 @@ function FakePortal() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Department</label>
-                  <input placeholder="e.g. Engineering"
+                  <input value={dept} onChange={(e) => setDept(e.target.value)} placeholder="e.g. Engineering"
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7c6cff]/25 focus:border-[#7c6cff]" />
                 </div>
                 <button type="submit" className="w-full py-3 px-4 bg-[#5647e0] hover:bg-[#4a3cd0] text-white font-semibold rounded-lg transition-colors text-sm">Save Profile</button>

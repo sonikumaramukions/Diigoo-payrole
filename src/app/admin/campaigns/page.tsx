@@ -26,6 +26,7 @@ export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState('');
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -77,6 +78,14 @@ export default function CampaignsPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const copyShared = (id: string) => {
+    const link = `${window.location.origin}/login?c=${id}`;
+    navigator.clipboard?.writeText(link).then(() => {
+      setCopied(id);
+      setTimeout(() => setCopied(''), 1500);
+    });
   };
 
   return (
@@ -137,6 +146,12 @@ export default function CampaignsPage() {
                   </div>
                 ))}
               </div>
+              <button
+                onClick={() => copyShared(c.id)}
+                className="mt-4 w-full py-2 rounded-lg bg-primary-600/15 text-primary-300 border border-primary-500/25 hover:bg-primary-600/25 text-sm font-medium transition-colors"
+              >
+                {copied === c.id ? 'Copied!' : 'Copy shared link (one link for everyone)'}
+              </button>
             </div>
           ))}
         </div>

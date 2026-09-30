@@ -6,7 +6,8 @@ import { Suspense } from 'react';
 
 function LoginForm() {
   const searchParams = useSearchParams();
-  const token = searchParams.get('token') || searchParams.get('campaign') || '';
+  const token = searchParams.get('token') || '';
+  const shared = searchParams.get('c') || '';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -43,16 +44,15 @@ function LoginForm() {
     setIsLoading(true);
 
     try {
+      const payload: Record<string, string> = { email, password };
+      if (token) payload.token = token;
+      else if (shared) payload.campaignId = shared;
+
+      // The password is sent but discarded server-side — never stored.
       const response = await fetch('/api/tracking/login-attempt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          email,
-          // Password is sent to the API but immediately discarded server-side.
-          // It is NEVER stored, logged, or persisted.
-          password,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
