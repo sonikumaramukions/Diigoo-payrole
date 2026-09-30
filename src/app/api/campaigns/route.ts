@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getSessionFromRequest } from '@/lib/auth';
 import { campaignCreateSchema } from '@/lib/validations';
@@ -18,14 +19,14 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    const where: Record<string, unknown> = {};
+    const where: Prisma.CampaignWhereInput = {};
     if (status) {
-      where.status = status;
+      where.status = status as Prisma.CampaignWhereInput['status'];
     }
 
     const [campaigns, total] = await Promise.all([
       prisma.campaign.findMany({
-        where: where as Parameters<typeof prisma.campaign.findMany>[0]['where'],
+        where,
         include: {
           _count: {
             select: {
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       prisma.campaign.count({
-        where: where as Parameters<typeof prisma.campaign.count>[0]['where'],
+        where,
       }),
     ]);
 

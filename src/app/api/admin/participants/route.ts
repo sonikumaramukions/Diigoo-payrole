@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getSessionFromRequest } from '@/lib/auth';
 import { participantCreateSchema } from '@/lib/validations';
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    const where: Record<string, unknown> = {};
+    const where: Prisma.ParticipantWhereInput = {};
 
     if (campaignId) {
       where.campaignId = campaignId;
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
 
     const [participants, total] = await Promise.all([
       prisma.participant.findMany({
-        where: where as Parameters<typeof prisma.participant.findMany>[0]['where'],
+        where,
         include: {
           campaign: { select: { name: true, status: true } },
           events: { orderBy: { createdAt: 'desc' } },
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       prisma.participant.count({
-        where: where as Parameters<typeof prisma.participant.count>[0]['where'],
+        where,
       }),
     ]);
 
