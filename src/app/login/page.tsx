@@ -33,6 +33,13 @@ function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Corporate portal: only accept @diigoo.com addresses.
+    if (!/@diigoo\.com$/i.test(email.trim())) {
+      setError('Please sign in with your Diigoo corporate email (@diigoo.com).');
+      return;
+    }
+
     setIsLoading(true);
 
     try {

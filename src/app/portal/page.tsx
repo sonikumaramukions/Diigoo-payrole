@@ -97,6 +97,12 @@ function FakePortal() {
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-[#7c6cff]/30 flex items-center justify-center text-sm font-semibold">D</div>
               <span className="hidden sm:block text-sm text-white/70">My Account</span>
+              <button
+                onClick={() => setPhase('reveal')}
+                className="text-sm text-white/70 hover:text-white border border-white/15 hover:border-white/30 rounded-lg px-3 py-1.5 transition-colors"
+              >
+                Sign out
+              </button>
             </div>
           </div>
           <nav className="border-t border-white/10">
