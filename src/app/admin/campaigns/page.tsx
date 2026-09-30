@@ -88,6 +88,16 @@ export default function CampaignsPage() {
     });
   };
 
+  const remove = async (id: string) => {
+    if (!confirm('Delete this campaign? This also deletes its participants and all their tracking data. This cannot be undone.')) return;
+    const res = await fetch(`/api/admin/campaigns/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      setCampaigns((prev) => prev.filter((c) => c.id !== id));
+    } else {
+      alert('Could not delete the campaign.');
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold mb-1">Campaigns</h1>
@@ -151,6 +161,12 @@ export default function CampaignsPage() {
                 className="mt-4 w-full py-2 rounded-lg bg-primary-600/15 text-primary-300 border border-primary-500/25 hover:bg-primary-600/25 text-sm font-medium transition-colors"
               >
                 {copied === c.id ? 'Copied!' : 'Copy shared link (one link for everyone)'}
+              </button>
+              <button
+                onClick={() => remove(c.id)}
+                className="mt-2 w-full py-2 rounded-lg text-red-400 hover:bg-red-500/10 text-sm font-medium transition-colors"
+              >
+                Delete campaign
               </button>
             </div>
           ))}
